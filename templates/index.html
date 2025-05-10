@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Downloader</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+    .container {
+      width: 400px;
+      margin: auto;
+      background-color: #1f1f1f;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #000;
+    }
+    input[type="url"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 15px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+    }
+    .radio-group {
+      margin-top: 15px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #03a9f4;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎥 Video Downloader</h1>
+    <form id="downloadForm">
+      <input type="url" id="videoUrl" placeholder="Paste video URL here" required />
+      <div class="radio-group">
+        <label><input type="radio" name="media" value="video" checked /> Video</label>
+        <label><input type="radio" name="media" value="audio" /> Audio (MP3)</label>
+      </div>
+      <button type="submit">Download</button>
+    </form>
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const form = document.getElementById("downloadForm");
+    const status = document.getElementById("status");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      status.textContent = "Preparing your download...";
+
+      const url = document.getElementById("videoUrl").value;
+      const mediaType = document.querySelector('input[name="media"]:checked').value;
+
+      try {
+        const response = await fetch("/download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, media: mediaType }),
+        });
+
+        if (!response.ok) throw new Error("Download failed.");
+
+        const blob = await response.blob();
+        const filename = response.headers.get("Content-Disposition")?.split("filename=")[1] || "downloaded";
+
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+        status.textContent = "Download started!";
+      } catch (err) {
+        console.error(err);
+        status.textContent = "Error: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
